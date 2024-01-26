@@ -1,9 +1,9 @@
 # graph-layout-metrics
 Towards a standardized set of graph layout criteria......
 
-Requires python 3.9 for packages. For instance if you use conda: 
-
+An example to install the required packages with conda: 
 ```
-conda create --name myenv python=3.9
-pip3 install -r requirements.txt
+conda create --name myenv 
+conda install pip
+pip install -r requirements.txt
 ```
