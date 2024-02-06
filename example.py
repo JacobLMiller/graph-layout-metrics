@@ -21,7 +21,7 @@ for gname in tqdm.tqdm(graph_corpus):
     M = Metrics(G,X)
 
     #A range of alphas between 1e-12 and 20, evenly spaced with 500 samples
-    alpha_spectrum = np.linspace(1e-12, 20, 500)
+    alpha_spectrum = np.linspace(1e-12, 20, 20)
 
     stress = np.zeros_like(alpha_spectrum)
     for i, alpha in enumerate(alpha_spectrum):

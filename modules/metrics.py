@@ -10,7 +10,7 @@ def optimize_scale(X,D,func):
     return func(min_a.x * X, D)
 
 def dist(u,v):
-    np.sqrt(np.sum(np.square(u - v)))
+    return np.sqrt(np.sum(np.square(u - v)))
 
 class Metrics():
 
@@ -90,7 +90,7 @@ class Metrics():
     
     def compute_ideal_edge_avg(self):
         X = self.X
-        edge_lengths = np.array([dist(X[i] - X[j]) for i,j in self.G.edges()])
+        edge_lengths = np.array([dist(X[i], X[j]) for i,j in self.G.edges()])
 
         avg = edge_lengths.mean()
 
