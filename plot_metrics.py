@@ -1,102 +1,94 @@
-import networkx as nx 
-import numpy as np 
+import random
+import networkx as nx
+import numpy as np
 import pylab as plt
 import os
 import tqdm
 from modules import graph_io
 from modules.metrics import Metrics
+from modules.metrics_h import MetricsH
+from sklearn.isotonic import IsotonicRegression
+
 
 def main():
-    #Setup output directory
+    # Setup output directory
     if not os.path.isdir("outputs"):
         os.makedirs("outputs")
 
-    #All graphs in the graphs directory
+    # All graphs in the graphs directory
     graph_corpus = list(graph_io.get_corpus_file_names())
 
-    for gname in tqdm.tqdm(graph_corpus):
-        G, X = graph_io.load_graph_with_embedding(gname, "random")
+    # for gname in tqdm.tqdm(graph_corpus):
+    for gname in graph_corpus:
+        for emb in ["random", "stress", "tsnet"]:
+            G, X = graph_io.load_graph_with_embedding(gname, emb)
+            # G, X = graph_io.load_graph_with_embedding("spx_teaser", "tsnet")
 
-        M = Metrics(G,X)
+            if len(X) >= 1000:
+                break
 
-        #A range of alphas between 1e-12 and 20, evenly spaced with 500 samples
-        alpha_spectrum = np.geomspace(1/128, 128, 15)#BALALALAA
+            # M = Metrics(G, X)
+            M1 = MetricsH(G, X)
+            M2 = MetricsH(G, X * 2)
 
-        # plot_stress(M, X, alpha_spectrum, gname)
-        # plot_neighborhood(M, X, alpha_spectrum, gname)
-        plot_edge_uniformity(M, X, alpha_spectrum, gname)
+            print(gname, emb, "kruskal 1x:", M1.compute_stress_kruskal())
+            print(gname, emb, "kruskal 2x:", M2.compute_stress_kruskal())
+            
+            # TODO OPTIMIZE, FIND AND COMPARE OPTIMAL ALPHA
+            # A range of alphas between 1e-12 and 20, evenly spaced
+            # alpha_spectrum = np.linspace(2e-12, 32, 50)
 
-def plot_stress(M: Metrics, X, alpha_spectrum: np.ndarray, gname: str):
-    metric = np.zeros_like(alpha_spectrum)
-    mstr = "stress"
+            # plot_shepard_diagram(M, gname, emb)
+            # plot_metric("stress_kruskal", M.compute_stress_kruskal, M, X, alpha_spectrum, gname, emb)
+            # plot_metric("stress_norm", M.compute_stress_norm, M, X, alpha_spectrum, gname, emb)
+            # plot_metric("neighborhood_preservation", M.compute_neighborhood, M, X, alpha_spectrum, gname, emb)
+            # plot_metric("edge_uniformity", M.compute_ideal_edge_avg, M, X, alpha_spectrum, gname, emb)
+            # plot_metric("edge_uniformity_indep", M.compute_ideal_edge_avg_indep, M, X, alpha_spectrum, gname, emb)
+
+            # TODO compare with other stress algos, compare for all layouts
+    
+
+
+def plot_metric(mstr, mfn, M, X, alphas, gname, emb):
+    metric = np.zeros_like(alphas)
 
     if not os.path.isdir(f"outputs/{mstr}"):
         os.makedirs(f"outputs/{mstr}")
 
-    for i, alpha in enumerate(alpha_spectrum):
+    for i, alpha in enumerate(alphas):
         M.setX(alpha * X)
-        metric[i] = M.compute_stress()
+        metric[i] = mfn()
 
-    ax = plt.gca()
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-
-    plt.plot(alpha_spectrum, metric, label=mstr)
+    plt.plot(alphas, metric, label=mstr)
     plt.legend()
     plt.xlabel("alpha scale factor")
     plt.ylabel(mstr)
     plt.suptitle(f"{mstr} for {gname}")
 
-    plt.savefig(f"outputs/{mstr}/{gname}_random_{mstr}.png")
+    plt.savefig(f"outputs/{mstr}/{gname}_{emb}_{mstr}.png")  # emb = 'random'
     plt.clf()
 
-def plot_neighborhood(M: Metrics, X, alpha_spectrum: np.ndarray, gname: str):
-    metric = np.zeros_like(alpha_spectrum)
-    mstr = "neighborhood_preservation"
 
-    if not os.path.isdir(f"outputs/{mstr}"):
-        os.makedirs(f"outputs/{mstr}")
+def plot_shepard_diagram(M, gname, emb):
+    sv = M.shepard_vals()
 
-    for i, alpha in enumerate(alpha_spectrum):
-        M.setX(alpha * X)
-        metric[i] = M.compute_neighborhood()
+    if not os.path.isdir(f"outputs/shepard_diagrams"):
+        os.makedirs(f"outputs/shepard_diagrams")
 
-    ax = plt.gca()
-    ax.set_xscale('log')
-    ax.set_yscale('log')
+    dij = [i[0] for i in sv]
+    xij = [i[1] for i in sv]
 
-    plt.plot(alpha_spectrum, metric, label=mstr)
-    plt.legend()
-    plt.xlabel("alpha scale factor")
-    plt.ylabel(mstr)
-    plt.suptitle(f"{mstr} for {gname}")
+    isoreg = IsotonicRegression().fit(dij, xij)
+    plt.scatter(xij, dij, s=5, c='dimgray')
+    plt.plot(isoreg.predict(dij), dij, c='darkred')
 
-    plt.savefig(f"outputs/{mstr}/{gname}_random_{mstr}.png")
+    plt.xlabel("x_ij")
+    plt.ylabel("d_ij")
+    plt.suptitle(f"shepard diagram for {gname}_{emb}")
+
+    plt.savefig(f"outputs/shepard_diagrams/{gname}_{emb}_shepard.png")
     plt.clf()
 
-def plot_edge_uniformity(M: Metrics, X, alpha_spectrum: np.ndarray, gname: str):
-    metric = np.zeros_like(alpha_spectrum)
-    mstr = "edge_uniformity"
-
-    if not os.path.isdir(f"outputs/{mstr}"):
-        os.makedirs(f"outputs/{mstr}")
-
-    for i, alpha in enumerate(alpha_spectrum):
-        M.setX(alpha * X)
-        metric[i] = M.compute_ideal_edge_avg()
-
-    ax = plt.gca()
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-
-    plt.plot(alpha_spectrum, metric, label=mstr)
-    plt.legend()
-    plt.xlabel("alpha scale factor")
-    plt.ylabel(mstr)
-    plt.suptitle(f"{mstr} for {gname}")
-
-    plt.savefig(f"outputs/{mstr}/{gname}_random_{mstr}.png")
-    plt.clf()
 
 if __name__ == '__main__':
     main()
