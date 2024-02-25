@@ -1,5 +1,5 @@
-import networkx as nx 
-import numpy as np 
+import networkx as nx
+import numpy as np
 import pylab as plt
 import os
 import tqdm
@@ -7,13 +7,13 @@ from modules import graph_io
 from modules.metrics import Metrics
 from modules.normalization import Normalize
 
-#Lets look at how stress behaves on some random layouts 
+# Lets look at how stress behaves on some random layouts
 
-#Setup output directory
+# Setup output directory
 if not os.path.isdir("outputs"):
     os.makedirs("outputs")
 
-#All graphs in the graphs directory
+# All graphs in the graphs directory
 graph_corpus = list(graph_io.get_corpus_file_names())
 
 for gname in tqdm.tqdm(graph_corpus):

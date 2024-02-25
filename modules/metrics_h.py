@@ -1,6 +1,7 @@
 import numpy as np
 import networkx as nx
 from sklearn.metrics import pairwise_distances
+from sklearn.isotonic import IsotonicRegression
 from modules import graph_io
 
 
@@ -15,7 +16,7 @@ def dist(u, v):
     return np.sqrt(np.sum(np.square(u - v)))
 
 
-class Metrics():
+class MetricsH():
 
     def __init__(self, G: nx.Graph, pos):
         """
@@ -36,6 +37,8 @@ class Metrics():
             self.X = pos
 
         self.D = graph_io.get_apsp(self.G)
+        
+        self.xij = None
 
     def setX(self, X):
         self.X = X
@@ -47,38 +50,64 @@ class Metrics():
 
         X = self.X
         D = self.D
-        N = self.N
 
-        # Calculate pairwise norm, store in difference variable
-        # print("X", X)
-        sum_of_squares = (X * X).sum(axis=1)
-        # print("X^2", sum_of_squares)
-        difference = np.sqrt(abs(sum_of_squares.reshape(
-            (N, 1)) + sum_of_squares.reshape((1, N)) - 2 * (X@X.T)))
-        # print("pairwise diff", difference)
+        xij = []
+        for i in range(len(X)):
+            for j in range(i+1, len(X)):
+                xij.append(((X[j][0] - X[i][0]) ** 2 +
+                           (X[j][1] - X[j][1]) ** 2) ** 0.5)
 
-        # Some error may have accumlated, set diagonal to 0
-        np.fill_diagonal(difference, 0)
-        # print("pairwise diff 0s", difference)
+        dij = []
+        for i in range(len(D)):
+            for j in range(i+1, len(D[0])):
+                dij.append(D[i][j])
 
-        stress = np.sum(np.square((difference - D) / np.maximum(D, 1e-15)))
-        # print("stress", stress)
+        # print("xij", xij[:10], xij[-10:], len(xij))
+        # print("dij", dij[:10], dij[-10:], len(dij))
 
-        return stress
+        sij = []
+        for k in range(len(xij)):
+            sij.append(((xij[k] - dij[k]) / (max(dij[k], 1e-15))) ** 2)
 
-    def pairwise_dist(self):
+        return sum(sij)
+
+    def shepard_vals(self):
         X = self.X
-        N = self.N
+        D = self.D
 
-        # Calculate pairwise norm, store in difference variable
-        sum_of_squares = (X * X).sum(axis=1)
-        difference = np.sqrt(abs(sum_of_squares.reshape(
-            (N, 1)) + sum_of_squares.reshape((1, N)) - 2 * (X@X.T)))
+        sij = []
+        for i in range(len(X)):
+            for j in range(i+1, len(X)):
+                xij = ((X[j][0] - X[i][0]) ** 2 +
+                       (X[j][1] - X[i][1]) ** 2) ** 0.5
+                sij.append((D[i][j], xij))
 
-        # Some error may have accumlated, set diagonal to 0
-        np.fill_diagonal(difference, 0)
+        return sorted(sij)
+    
+    # def get_pairwise(self):
+    #     if isinstance(self.xij, np.ndarray):
+    #         return self.xij 
+    #     self.xij = pairwise_distances(self.X)
+    #     return self.xij
 
-        return difference
+    def compute_stress_kruskal(self):
+        
+        output_dists = pairwise_distances(self.X)
+        xij = output_dists[ np.triu_indices( output_dists.shape[0] ) ]
+
+        dij  = self.D[ np.triu_indices( self.D.shape[0] ) ]
+
+        sorted_indices = np.argsort(dij)
+        dij = dij[sorted_indices]
+        xij = xij[sorted_indices]
+
+        hij = IsotonicRegression().fit(dij, xij).predict(dij)
+
+        raw_stress  = np.sum( np.square( xij - hij ) )
+        norm_factor = np.sum( np.square( xij ) )
+
+        kruskal_stress = np.sqrt( raw_stress / norm_factor )
+        return kruskal_stress
 
     def compute_neighborhood(self, rg=2):
         """
