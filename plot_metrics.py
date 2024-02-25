@@ -19,7 +19,7 @@ def main():
     graph_corpus = list(graph_io.get_corpus_file_names())
 
     # for gname in tqdm.tqdm(graph_corpus):
-    for gname in graph_corpus:
+    for gname in tqdm.tqdm(graph_corpus):
         for emb in ["random", "stress", "tsnet"]:
             G, X = graph_io.load_graph_with_embedding(gname, emb)
             # G, X = graph_io.load_graph_with_embedding("spx_teaser", "tsnet")
@@ -28,11 +28,19 @@ def main():
                 break
 
             # M = Metrics(G, X)
-            M1 = MetricsH(G, X)
-            M2 = MetricsH(G, X * 2)
 
-            print(gname, emb, "kruskal 1x:", M1.compute_stress_kruskal())
-            print(gname, emb, "kruskal 2x:", M2.compute_stress_kruskal())
+            spectrum = np.linspace(0.1, 20, 100)
+            M = MetricsH(G, X)
+
+            kruskal_vals = list()
+            for alpha in spectrum:
+                M.setX(alpha * X)
+                kruskal_vals.append( M.compute_stress_kruskal() )
+
+            plt.plot( spectrum, kruskal_vals )
+            plt.savefig(f"outputs/shepard_diagrams/{gname}_{emb}_shepard.png")
+            plt.clf()
+
             
             # TODO OPTIMIZE, FIND AND COMPARE OPTIMAL ALPHA
             # A range of alphas between 1e-12 and 20, evenly spaced
@@ -75,12 +83,23 @@ def plot_shepard_diagram(M, gname, emb):
     if not os.path.isdir(f"outputs/shepard_diagrams"):
         os.makedirs(f"outputs/shepard_diagrams")
 
+    from sklearn.metrics import pairwise_distances
+    output_dists = pairwise_distances(M.X)
+    output_dists = output_dists[ np.triu_indices( output_dists.shape[0], 1 ) ]
+
+    input_dists  = M.D[ np.triu_indices( M.D.shape[0], 1 ) ]        
+
+    sorted_indices = np.argsort(input_dists)
+    input_dists = input_dists[sorted_indices]
+    output_dists = output_dists[sorted_indices]
+
     dij = [i[0] for i in sv]
     xij = [i[1] for i in sv]
 
     isoreg = IsotonicRegression().fit(dij, xij)
     plt.scatter(xij, dij, s=5, c='dimgray')
     plt.plot(isoreg.predict(dij), dij, c='darkred')
+    plt.plot(IsotonicRegression().fit(input_dists,output_dists).predict(input_dists), input_dists, c="blue")
 
     plt.xlabel("x_ij")
     plt.ylabel("d_ij")
@@ -92,3 +111,12 @@ def plot_shepard_diagram(M, gname, emb):
 
 if __name__ == '__main__':
     main()
+
+    # test = np.array([
+    #     [1,2,3],
+    #     [4,5,6],
+    #     [7,8,9]
+    # ])
+    # print(np.triu(test))
+    # print()
+    # print(np.triu(test, 1))

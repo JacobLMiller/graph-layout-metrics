@@ -37,6 +37,8 @@ class MetricsH():
             self.X = pos
 
         self.D = graph_io.get_apsp(self.G)
+        
+        self.xij = None
 
     def setX(self, X):
         self.X = X
@@ -77,27 +79,35 @@ class MetricsH():
         for i in range(len(X)):
             for j in range(i+1, len(X)):
                 xij = ((X[j][0] - X[i][0]) ** 2 +
-                       (X[j][1] - X[j][1]) ** 2) ** 0.5
+                       (X[j][1] - X[i][1]) ** 2) ** 0.5
                 sij.append((D[i][j], xij))
 
         return sorted(sij)
+    
+    # def get_pairwise(self):
+    #     if isinstance(self.xij, np.ndarray):
+    #         return self.xij 
+    #     self.xij = pairwise_distances(self.X)
+    #     return self.xij
 
     def compute_stress_kruskal(self):
-        sv = self.shepard_vals()
+        
+        output_dists = pairwise_distances(self.X)
+        xij = output_dists[ np.triu_indices( output_dists.shape[0] ) ]
 
-        dij = [i[0] for i in sv]
-        xij = [i[1] for i in sv]
+        dij  = self.D[ np.triu_indices( self.D.shape[0] ) ]
 
-        isoreg = IsotonicRegression().fit(dij, xij)
-        hij = isoreg.predict(dij)
+        sorted_indices = np.argsort(dij)
+        dij = dij[sorted_indices]
+        xij = xij[sorted_indices]
 
-        raw_stress = 0
-        norm_factor = 0
-        for k in range(len(sv)):
-            raw_stress += (xij[k] - hij[k]) ** 2
-            norm_factor += xij[k] ** 2
+        hij = IsotonicRegression().fit(dij, xij).predict(dij)
 
-        return (raw_stress / norm_factor) ** 0.5
+        raw_stress  = np.sum( np.square( xij - hij ) )
+        norm_factor = np.sum( np.square( xij ) )
+
+        kruskal_stress = np.sqrt( raw_stress / norm_factor )
+        return kruskal_stress
 
     def compute_neighborhood(self, rg=2):
         """
