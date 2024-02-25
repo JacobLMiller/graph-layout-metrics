@@ -56,7 +56,23 @@ class Metrics():
         stress = np.sum( np.square( (difference - D) / np.maximum(D, 1e-15) ) )
 
         return stress
+    
+    def kruskal_stress(self):
 
+        X = self.X
+        D = self.D 
+        N = self.N
+
+        #Calculate pairwise norm, store in difference variable
+        sum_of_squares = (X * X).sum(axis=1)
+        difference = np.sqrt( abs( sum_of_squares.reshape((N,1)) + sum_of_squares.reshape((1,N)) - 2 * (X@X.T) ))
+
+        #Some error may have accumlated, set diagonal to 0 
+        np.fill_diagonal(difference, 0)
+
+        stress = np.sum( np.square( (difference - D) / np.maximum(D, 1e-15) ) )
+
+        return np.sqrt(stress / sum_of_squares)
 
 
     def compute_neighborhood(self,rg = 2):
@@ -94,5 +110,5 @@ class Metrics():
 
         avg = edge_lengths.mean()
 
-        return np.sum(np.square( (edge_lengths - avg) / avg ))
+        return np.sum(np.square( (edge_lengths - avg) / np.maximum(avg, 1e-15) ))
 

@@ -5,6 +5,7 @@ import os
 import tqdm
 from modules import graph_io
 from modules.metrics import Metrics
+from modules.normalization import Normalize
 
 #Lets look at how stress behaves on some random layouts 
 
@@ -19,9 +20,16 @@ for gname in tqdm.tqdm(graph_corpus):
     G, X = graph_io.load_graph_with_embedding(gname, "random")
 
     M = Metrics(G,X)
+    N = Normalize(G, X)
+
+    normal_factors = {
+        "Identity": N.identity(),
+        "Unit Norm": N.unit_norm(),
+        "Optimize": N.find_min()
+    }
 
     #A range of alphas between 1e-12 and 20, evenly spaced with 500 samples
-    alpha_spectrum = np.linspace(1e-12, 20, 500)
+    alpha_spectrum = np.linspace(1e-12, 10, 500)
 
     stress = np.zeros_like(alpha_spectrum)
     for i, alpha in enumerate(alpha_spectrum):
@@ -29,10 +37,20 @@ for gname in tqdm.tqdm(graph_corpus):
         stress[i] = M.compute_stress()
 
     plt.plot(alpha_spectrum, stress, label="stress")
+
+    y_min = np.min(stress)
+    y_max = np.max(stress)
+    interp_space = 20
+    for name, val in normal_factors.items():
+        print([val] * interp_space)
+        plt.plot([val] * interp_space, np.linspace(y_min,y_max,interp_space), label=name)
+
     plt.legend()
     plt.xlabel("alpha scale factor")
     plt.ylabel("stress")
     plt.suptitle(f"stress for {gname}")
 
-    plt.savefig(f"outputs/{gname}_random_stress.png")
+    plt.show()
+    # plt.savefig(f"outputs/{gname}_random_stress.png")
     plt.clf()
+    break
