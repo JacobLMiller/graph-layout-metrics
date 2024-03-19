@@ -37,7 +37,7 @@ class MetricsH():
             self.X = pos
 
         self.D = graph_io.get_apsp(self.G)
-        
+
         self.xij = None
 
     def setX(self, X):
@@ -83,19 +83,18 @@ class MetricsH():
                 sij.append((D[i][j], xij))
 
         return sorted(sij)
-    
+
     # def get_pairwise(self):
     #     if isinstance(self.xij, np.ndarray):
-    #         return self.xij 
+    #         return self.xij
     #     self.xij = pairwise_distances(self.X)
     #     return self.xij
 
     def compute_stress_kruskal(self):
-        
         output_dists = pairwise_distances(self.X)
-        xij = output_dists[ np.triu_indices( output_dists.shape[0] ) ]
+        xij = output_dists[np.triu_indices(output_dists.shape[0])]
 
-        dij  = self.D[ np.triu_indices( self.D.shape[0] ) ]
+        dij = self.D[np.triu_indices(self.D.shape[0])]
 
         sorted_indices = np.argsort(dij)
         dij = dij[sorted_indices]
@@ -103,10 +102,10 @@ class MetricsH():
 
         hij = IsotonicRegression().fit(dij, xij).predict(dij)
 
-        raw_stress  = np.sum( np.square( xij - hij ) )
-        norm_factor = np.sum( np.square( xij ) )
+        raw_stress = np.sum(np.square(xij - hij))
+        norm_factor = np.sum(np.square(xij))
 
-        kruskal_stress = np.sqrt( raw_stress / norm_factor )
+        kruskal_stress = np.sqrt(raw_stress / norm_factor)
         return kruskal_stress
 
     def compute_neighborhood(self, rg=2):

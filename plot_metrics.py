@@ -18,33 +18,29 @@ def main():
     # All graphs in the graphs directory
     graph_corpus = list(graph_io.get_corpus_file_names())
 
-    # for gname in tqdm.tqdm(graph_corpus):
+    create_kruskal_graphs(graph_corpus)
+
+    # for gname in graph_corpus:
     for gname in tqdm.tqdm(graph_corpus):
         for emb in ["random", "stress", "tsnet"]:
             G, X = graph_io.load_graph_with_embedding(gname, emb)
-            # G, X = graph_io.load_graph_with_embedding("spx_teaser", "tsnet")
 
-            if len(X) >= 1000:
+            if len(X) >= 2000:
                 break
 
-            # M = Metrics(G, X)
-
-            spectrum = np.linspace(0.1, 20, 100)
+            # spectrum = np.linspace(0.1, 20, 100)
             M = MetricsH(G, X)
 
-            kruskal_vals = list()
-            for alpha in spectrum:
-                M.setX(alpha * X)
-                kruskal_vals.append( M.compute_stress_kruskal() )
+            # kruskal_vals = list()
+            # for alpha in spectrum:
+            #     M.setX(alpha * X)
+            #     kruskal_vals.append(M.compute_stress_kruskal())
 
-            plt.plot( spectrum, kruskal_vals )
-            plt.savefig(f"outputs/shepard_diagrams/{gname}_{emb}_shepard.png")
-            plt.clf()
+            # plt.plot(spectrum, kruskal_vals)
+            # plt.savefig(f"outputs/shepard_diagrams/{gname}_{emb}_shepard.png")
+            # plt.clf()
 
-            
             # TODO OPTIMIZE, FIND AND COMPARE OPTIMAL ALPHA
-            # A range of alphas between 1e-12 and 20, evenly spaced
-            # alpha_spectrum = np.linspace(2e-12, 32, 50)
 
             # plot_shepard_diagram(M, gname, emb)
             # plot_metric("stress_kruskal", M.compute_stress_kruskal, M, X, alpha_spectrum, gname, emb)
@@ -54,7 +50,35 @@ def main():
             # plot_metric("edge_uniformity_indep", M.compute_ideal_edge_avg_indep, M, X, alpha_spectrum, gname, emb)
 
             # TODO compare with other stress algos, compare for all layouts
-    
+
+
+def create_kruskal_graphs(corpus):
+    for gname in tqdm.tqdm(corpus):
+        kruskal_vals = list()
+        for emb in ["random", "stress", "tsnet"]:
+            G, X = graph_io.load_graph_with_embedding(gname, emb)
+
+            # if len(X) >= 2000:
+            #     break
+
+            M = MetricsH(G, X)
+
+            kruskal_vals.append(M.compute_stress_kruskal())
+
+        if (len(kruskal_vals) != 3):
+            continue
+
+        plt.bar(['random', 'stress', 'tsnet'], kruskal_vals,
+                color=['tab:red', 'tab:blue', 'tab:green'])
+        plt.ylabel('kruskal stress measure')
+        plt.ylim(0, 1)
+        plt.suptitle(f'kruskal stress for {gname}')
+
+        if not os.path.isdir("outputs/stress_kruskal"):
+            os.makedirs("outputs/stress_kruskal")
+
+        plt.savefig(f"outputs/stress_kruskal/{gname}_kruskal.png")
+        plt.clf()
 
 
 def plot_metric(mstr, mfn, M, X, alphas, gname, emb):
@@ -85,9 +109,9 @@ def plot_shepard_diagram(M, gname, emb):
 
     from sklearn.metrics import pairwise_distances
     output_dists = pairwise_distances(M.X)
-    output_dists = output_dists[ np.triu_indices( output_dists.shape[0], 1 ) ]
+    output_dists = output_dists[np.triu_indices(output_dists.shape[0], 1)]
 
-    input_dists  = M.D[ np.triu_indices( M.D.shape[0], 1 ) ]        
+    input_dists = M.D[np.triu_indices(M.D.shape[0], 1)]
 
     sorted_indices = np.argsort(input_dists)
     input_dists = input_dists[sorted_indices]
@@ -99,7 +123,8 @@ def plot_shepard_diagram(M, gname, emb):
     isoreg = IsotonicRegression().fit(dij, xij)
     plt.scatter(xij, dij, s=5, c='dimgray')
     plt.plot(isoreg.predict(dij), dij, c='darkred')
-    plt.plot(IsotonicRegression().fit(input_dists,output_dists).predict(input_dists), input_dists, c="blue")
+    plt.plot(IsotonicRegression().fit(input_dists, output_dists).predict(
+        input_dists), input_dists, c="blue")
 
     plt.xlabel("x_ij")
     plt.ylabel("d_ij")

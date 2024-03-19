@@ -34,7 +34,7 @@ for gname in tqdm.tqdm(graph_corpus):
     stress = np.zeros_like(alpha_spectrum)
     for i, alpha in enumerate(alpha_spectrum):
         M.setX(alpha * X)
-        stress[i] = M.compute_stress()
+        stress[i] = M.compute_stress_norm()
 
     plt.plot(alpha_spectrum, stress, label="stress")
 
