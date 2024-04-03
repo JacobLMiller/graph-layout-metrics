@@ -23,7 +23,7 @@ class Layout():
     def tsnet_layout(self):
         from sklearn.manifold import TSNE 
         from modules.graph_io import get_apsp
-        return TSNE(init="random", metric="precomputed", perplexity=min(30, G.number_of_nodes()-1)).fit_transform(get_apsp(self.G))
+        return TSNE(init="random", metric="precomputed", perplexity=min(30, self.G.number_of_nodes()-1)).fit_transform(get_apsp(self.G))
     
     def compute(self):
         if self.alg == "random":
@@ -38,29 +38,37 @@ class Layout():
     def store_layout(self):
         assert self.X is not None
         from modules.graph_io import save_graph_with_embedding
-        save_graph_with_embedding(self.G, self.X, f"{self.G.graph['gname']}_{self.alg}.graphml")
+        # save_graph_with_embedding(self.G, self.X, f"{self.G.graph['gname']}_{self.alg}.graphml")
+        np.save(f"embeddings/{self.G.graph['gname']}_{self.alg}.npy", self.X)
 
 if __name__ == "__main__":
     import os
     import tqdm
-    from modules.graph_io import load_graphml
+    from modules.graph_io import load_graphml, get_corpus_SS, load_txt, load_embedding
 
     if not os.path.isdir("embeddings"):
         os.makedirs("embeddings")
 
 
-    graph_names = os.listdir("graphs")
-    for gname in tqdm.tqdm(graph_names):
-        G = load_graphml(gname)
+    # graph_names = os.listdir("graphs")
+    # for gname in tqdm.tqdm(graph_names):
+    for gname in tqdm.tqdm(os.listdir("SS_graphs")):
+    # for G in tqdm.tqdm(get_corpus_SS()):
+        # G = load_graphml(gname)
+        G = load_txt("SS_graphs/" + gname)
 
-        emb = Layout(G, "random")
-        emb.compute()
-        emb.store_layout()
+        print(G.number_of_nodes(), G.number_of_edges())
+        if not isinstance(load_embedding(G,"random"), np.ndarray):
+            emb = Layout(G, "random")
+            emb.compute()
+            emb.store_layout()
 
-        emb = Layout(G, "stress")
-        emb.compute()
-        emb.store_layout()
+        if not isinstance(load_embedding(G,"stress"), np.ndarray):
+            emb = Layout(G, "stress")
+            emb.compute()
+            emb.store_layout()
 
-        emb = Layout(G, "tsnet")
-        emb.compute()
-        emb.store_layout()            
+        if not isinstance(load_embedding(G,"tsnet"), np.ndarray):
+            emb = Layout(G, "tsnet")
+            emb.compute()
+            emb.store_layout()            

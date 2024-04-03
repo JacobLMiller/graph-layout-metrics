@@ -40,6 +40,7 @@ class Metrics():
     def setX(self, X):
         self.X = X
 
+    #TODO Something is fishy here...
     def compute_stress_norm(self):
         """
         Computes \sum_{i,j} ( (||X_i - X_j|| - D_{i,j}) / D_{i,j})^2
@@ -59,7 +60,6 @@ class Metrics():
         np.fill_diagonal(difference, 0)
         # print("pairwise diff 0s", difference)
 
-        print(difference)
         stress = np.sum(np.square((difference - D) / np.maximum(D, 1e-15)))
         # print("stress", stress)
 
@@ -90,6 +90,12 @@ class Metrics():
 
         kruskal_stress = np.sqrt( raw_stress / norm_factor )
         return kruskal_stress
+    
+    def compute_stress_ratios():
+        stress = .07
+
+        return stress
+
 
     def pairwise_dist(self):
         X = self.X

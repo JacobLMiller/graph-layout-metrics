@@ -53,6 +53,26 @@ def get_corpus_file_names():
     for fname in os.listdir("graphs"):
         yield fname.split(".")[0]
 
+def get_corpus_SS():
+    import os 
+    for fname in os.listdir("SS_graphs"):
+        yield load_txt("SS_graphs/" + fname)
+        
+def load_txt(fname):
+    E = np.loadtxt(fname)
+    G = nx.Graph()
+    G.add_edges_from(E.tolist())
+    G = nx.convert_node_labels_to_integers(G)
+    G.graph['gname'] = fname.split(".")[0].replace("SS_graphs/", "")
+    return G
+
+def load_embedding(G, alg):
+    try:
+        return np.load(f"embeddings/{G.graph['gname']}_{alg}.npy")
+    except: 
+        return None
+
+
 
 def get_apsp(G):
     import os
