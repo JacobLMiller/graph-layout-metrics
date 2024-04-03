@@ -92,17 +92,22 @@ class MetricsH():
 
     def compute_stress_kruskal(self):
         
+        #sklearn has implemented an efficient distance matrix algorithm for us
         output_dists = pairwise_distances(self.X)
-        xij = output_dists[ np.triu_indices( output_dists.shape[0] ) ]
 
-        dij  = self.D[ np.triu_indices( self.D.shape[0] ) ]
+        #Extract the upper triangular of both distance matrices into 1d arrays 
+        #We know the diagonal is all zero, so offset by one
+        xij = output_dists[ np.triu_indices( output_dists.shape[0], k=1 ) ]
+        dij  = self.D[ np.triu_indices( self.D.shape[0], k=1 ) ]
 
+        #Find the indices of dij that when reordered, would sort it. Apply to both arrays
         sorted_indices = np.argsort(dij)
         dij = dij[sorted_indices]
         xij = xij[sorted_indices]
 
         hij = IsotonicRegression().fit(dij, xij).predict(dij)
 
+        #
         raw_stress  = np.sum( np.square( xij - hij ) )
         norm_factor = np.sum( np.square( xij ) )
 

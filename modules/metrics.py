@@ -61,10 +61,37 @@ class Metrics():
         np.fill_diagonal(difference, 0)
         # print("pairwise diff 0s", difference)
 
+        print(difference)
         stress = np.sum(np.square((difference - D) / np.maximum(D, 1e-15)))
         # print("stress", stress)
 
         return stress
+
+    def compute_stress_kruskal(self):
+        from sklearn.isotonic import IsotonicRegression
+
+        
+        #sklearn has implemented an efficient distance matrix algorithm for us
+        output_dists = pairwise_distances(self.X)
+
+        #Extract the upper triangular of both distance matrices into 1d arrays 
+        #We know the diagonal is all zero, so offset by one
+        xij = output_dists[ np.triu_indices( output_dists.shape[0], k=1 ) ]
+        dij  = self.D[ np.triu_indices( self.D.shape[0], k=1 ) ]
+
+        #Find the indices of dij that when reordered, would sort it. Apply to both arrays
+        sorted_indices = np.argsort(dij)
+        dij = dij[sorted_indices]
+        xij = xij[sorted_indices]
+
+        hij = IsotonicRegression().fit(dij, xij).predict(dij)
+
+        #
+        raw_stress  = np.sum( np.square( xij - hij ) )
+        norm_factor = np.sum( np.square( xij ) )
+
+        kruskal_stress = np.sqrt( raw_stress / norm_factor )
+        return kruskal_stress
 
     def pairwise_dist(self):
         X = self.X
@@ -122,3 +149,25 @@ class Metrics():
         edge_lengths = np.array([dist(X[i], X[j]) for i, j in self.G.edges()])
 
         return np.sum(np.square((edge_lengths - 1) / 1))
+
+class MetricsData(Metrics):
+    def __init__(self, X: np.ndarray, Y: np.ndarray):
+        """
+        X: Low dimensional embedding of matrix Y. Can be given as coordinates N x d matrix 
+            (for which a pairwise distance matrix will be computed) or the distances directly as an N x N matrix
+        Y: High dimensional coordiantes of objects. Can be given as N x D matrix
+            (for which a pairwise distance matrix will be computed) or the distances directly as an N x N matrix        
+        """
+
+        #Check data format
+        if X.shape[0] == X.shape[1]: self.X = X 
+        else: self.X = pairwise_distances(X)
+        if Y.shape[0] == Y.shape[1]: self.D = Y 
+        else: self.D = pairwise_distances(Y)
+
+        self.N = X.shape[0]
+
+        #Ensure compatibility with parent class 
+        self.name = None 
+        self.G = None
+
