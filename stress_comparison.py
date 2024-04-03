@@ -10,8 +10,8 @@ def main():
     if not os.path.isdir("outputs"):
         os.makedirs("outputs")
 
-    # stress_comp_test(5)
-    stress_orders_test(5)
+    stress_comp_test(1)
+    # stress_orders_test(5)
     # find_min_crossings(5)
 
 
@@ -33,52 +33,39 @@ def plot_er_stress(G, er_num, er_prob):
     D = dict(nx.all_pairs_shortest_path_length(G))
     D = [[D[i][j] for j in range(len(D[i]))] for i in range(len(D))]
 
-    pos_spr = nx.spring_layout(G)
-    pos_r = nx.random_layout(G)
-    pos_spi = nx.spiral_layout(G)
+    pos = {"spring": nx.spring_layout(G),
+           "random": nx.random_layout(G),
+           "spiral": nx.spiral_layout(G)}
 
-    X_spr = pairwise_distances([pos_spr[i] for i in range(len(pos_spr))])
-    X_r = pairwise_distances([pos_r[i] for i in range(len(pos_r))])
-    X_spi = pairwise_distances([pos_spi[i] for i in range(len(pos_spi))])
-
-    min_alpha_spr = min_alpha(X_spr, D)
-    min_alpha_r = min_alpha(X_r, D)
-    min_alpha_spi = min_alpha(X_spi, D)
-
-    spr_r_alpha = intersect_alpha(X_spr, X_r, D)
-    spr_spi_alpha = intersect_alpha(X_spr, X_spi, D)
-    spi_r_alpha = intersect_alpha(X_spi, X_r, D)
+    X = {k: pairwise_distances([pos[k][i]
+                               for i in range(len(pos[k]))]) for k in pos}
+    mins, inters = calc_alphas(X, D)
 
     alphas = list()
-    S_spr = list()
-    S_r = list()
-    S_spi = list()
-    max_alpha = max(spr_r_alpha, spr_spi_alpha, spi_r_alpha,
-                    min_alpha_spr, min_alpha_r, min_alpha_spi) + 0.5
+    stresses = dict()
+    max_alpha = max(max(mins.values()), max(inters.values())) + 0.5
+
     alpha = 0
     while alpha < max_alpha:
-        S_spr.append(stress(X_spr, D, alpha))
-        S_r.append(stress(X_r, D, alpha))
-        S_spi.append(stress(X_spi, D, alpha))
+        for k in X:
+            if k not in stresses:
+                stresses[k] = list()
+            stresses[k].append(stress(X[k], D, alpha))
         alphas.append(alpha)
         alpha += max_alpha / 200
 
-    plt.plot(alphas, S_spr, label='spring', c='tab:red', zorder=0)
-    plt.plot(alphas, S_r, label='random', c='tab:green', zorder=0)
-    plt.plot(alphas, S_spi, label='spiral', c='tab:blue', zorder=0)
+    colors = ['tab:red', 'tab:green', 'tab:blue', 'tab:orange', 'tab:pink']
 
-    plt.scatter(min_alpha_spr, stress(
-        X_spr, D, min_alpha_spr), c='tab:red', zorder=1)
-    plt.scatter(min_alpha_r, stress(X_r, D, min_alpha_r),
-                c='tab:green', zorder=1)
-    plt.scatter(min_alpha_spi, stress(
-        X_spi, D, min_alpha_spi), c='tab:blue', zorder=1)
+    for i, k in enumerate(stresses.keys()):
+        plt.plot(alphas, stresses[k], label=k, c=colors[i % len(colors)], zorder=0)
+        plt.scatter(mins[k], stress(X[k], D, mins[k]), c=colors[i % len(colors)], zorder=1)
 
-    plt.vlines([a for a in [spr_r_alpha, spr_spi_alpha, spi_r_alpha] if a > 0],
-               min(min_alpha_spr, min_alpha_r, min_alpha_spi),
-               max(stress(X_spr, D, max_alpha), stress(
-                   X_r, D, max_alpha), stress(X_spi, D, max_alpha)),
-               colors='tab:purple', zorder=-1, label='intersections')
+    plt.vlines([a for a in inters.values() if a > 0], min(mins.values()), max([stress(X[k], D, max_alpha)
+               for k in X]), colors='tab:purple', zorder=-1, label='intersections')
+
+    if not os.path.isdir("outputs/stress_comparison"):
+        os.makedirs("outputs/stress_comparison")
+
     plt.xlabel("alpha scale factor")
     plt.ylabel("normalized stress")
     plt.legend()
@@ -91,20 +78,11 @@ def plot_er_stress(G, er_num, er_prob):
         f"outputs/stress_comparison/er_{er_num}_{str(er_prob).replace('.', '')}_{i}_plot.png")
     plt.clf()
 
-    nx.draw(G, pos_spr)
-    plt.savefig(
-        f"outputs/stress_comparison/er_{er_num}_{str(er_prob).replace('.','')}_{i}_spr")
-    plt.clf()
-
-    nx.draw(G, pos_r)
-    plt.savefig(
-        f"outputs/stress_comparison/er_{er_num}_{str(er_prob).replace('.','')}_{i}_r")
-    plt.clf()
-
-    nx.draw(G, pos_spi)
-    plt.savefig(
-        f"outputs/stress_comparison/er_{er_num}_{str(er_prob).replace('.','')}_{i}_spi")
-    plt.clf()
+    for k in pos:
+        nx.draw(G, pos[k])
+        plt.savefig(
+            f"outputs/stress_comparison/er_{er_num}_{str(er_prob).replace('.','')}_{i}_{k}")
+        plt.clf()
 
 
 def stress_orders_test(ntests):
@@ -345,6 +323,17 @@ def find_min_crossings(ntests):
                 plt.clf()
 
                 found = True
+
+
+def calc_alphas(X, D):
+    mins = dict()
+    inters = dict()
+    for k1 in X:
+        mins[k1] = min_alpha(X[k1], D)
+        for k2 in X:
+            if k1 != k2 and (k2, k1) not in inters and (k1, k2) not in inters:
+                inters[(k1, k2)] = intersect_alpha(X[k1], X[k2], D)
+    return mins, inters
 
 
 def min_alpha(X, D):
