@@ -50,12 +50,10 @@ class Metrics():
         N = self.N
 
         # Calculate pairwise norm, store in difference variable
-        # print("X", X)
         sum_of_squares = (X * X).sum(axis=1)
         # print("X^2", sum_of_squares)
         difference = np.sqrt(abs(sum_of_squares.reshape(
             (N, 1)) + sum_of_squares.reshape((1, N)) - 2 * (X@X.T)))
-        # print("pairwise diff", difference)
 
         # Some error may have accumlated, set diagonal to 0
         np.fill_diagonal(difference, 0)
@@ -154,14 +152,12 @@ class MetricsData(Metrics):
     def __init__(self, X: np.ndarray, Y: np.ndarray):
         """
         X: Low dimensional embedding of matrix Y. Can be given as coordinates N x d matrix 
-            (for which a pairwise distance matrix will be computed) or the distances directly as an N x N matrix
         Y: High dimensional coordiantes of objects. Can be given as N x D matrix
             (for which a pairwise distance matrix will be computed) or the distances directly as an N x N matrix        
         """
 
         #Check data format
-        if X.shape[0] == X.shape[1]: self.X = X 
-        else: self.X = pairwise_distances(X)
+        self.X = X
         if Y.shape[0] == Y.shape[1]: self.D = Y 
         else: self.D = pairwise_distances(Y)
 
