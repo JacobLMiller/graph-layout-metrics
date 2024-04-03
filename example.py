@@ -25,7 +25,7 @@ for gname in tqdm.tqdm(graph_corpus):
     normal_factors = {
         "Identity": N.identity(),
         "Unit Norm": N.unit_norm(),
-        "Optimize": N.find_min()
+        "Optimize": None
     }
 
     #A range of alphas between 1e-12 and 20, evenly spaced with 500 samples
@@ -35,6 +35,9 @@ for gname in tqdm.tqdm(graph_corpus):
     for i, alpha in enumerate(alpha_spectrum):
         M.setX(alpha * X)
         stress[i] = M.compute_stress_norm()
+
+    normal_factors["Optimize"] = alpha_spectrum[ np.argmin(stress) ]
+    print(normal_factors)
 
     plt.plot(alpha_spectrum, stress, label="stress")
 
