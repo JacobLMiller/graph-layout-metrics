@@ -46,7 +46,7 @@ if __name__ == "__main__":
     """
 
     experiment = Experiment(
-        lambda G,x: Metrics(G,x).compute_stress_norm(), #Given graph G, pos matrix x computes normalized stress
+        lambda G,x: Metrics(G,x).compute_stress_norm(), #Given graph G and pos matrix x, computes normalized stress
         "normalized-stress"                             # str name of stress metric, sets default of output json
     )
     experiment.conduct_experiment(limit=10)             #Only run the first 10 for example (default is to run all)
