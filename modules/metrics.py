@@ -35,35 +35,38 @@ class Metrics():
         elif isinstance(pos, np.ndarray):
             self.X = pos
 
+        self.Xij = pairwise_distances(self.X)
+
         self.D = graph_io.get_apsp(self.G)
 
     def setX(self, X):
         self.X = X
+        self.Xij = pairwise_distances(self.X)
 
-    #TODO Something is fishy here...
     def compute_stress_norm(self):
         """
         Computes \sum_{i,j} ( (||X_i - X_j|| - D_{i,j}) / D_{i,j})^2
         """
 
-        X = self.X
+        Xij = self.Xij
+        D = self.D
+
+        stress = np.sum(np.square((Xij - D) / np.maximum(D, 1e-15)))
+
+        return stress / 2
+
+    def compute_stress_raw(self):
+        """
+        Computes \sum_{i,j} ( (||X_i - X_j|| - D_{i,j}) / D_{i,j})^2
+        """
+
+        Xij = self.Xij
         D = self.D
         N = self.N
 
-        # Calculate pairwise norm, store in difference variable
-        sum_of_squares = (X * X).sum(axis=1)
-        # print("X^2", sum_of_squares)
-        difference = np.sqrt(abs(sum_of_squares.reshape(
-            (N, 1)) + sum_of_squares.reshape((1, N)) - 2 * (X@X.T)))
+        stress = np.sum(np.square(Xij - D))
 
-        # Some error may have accumlated, set diagonal to 0
-        np.fill_diagonal(difference, 0)
-        # print("pairwise diff 0s", difference)
-
-        stress = np.sum(np.square((difference - D) / np.maximum(D, 1e-15)))
-        # print("stress", stress)
-
-        return stress
+        return stress / 2        
 
     def compute_stress_kruskal(self):
         from sklearn.isotonic import IsotonicRegression
@@ -91,25 +94,44 @@ class Metrics():
         kruskal_stress = np.sqrt( raw_stress / norm_factor )
         return kruskal_stress
     
-    def compute_stress_ratios():
-        stress = .07
+    def compute_stress_ratios(self):
 
-        return stress
+        return 1.0
 
+    def compute_stress_minopt(self):
 
-    def pairwise_dist(self):
-        X = self.X
-        N = self.N
+        return 1.0
 
-        # Calculate pairwise norm, store in difference variable
-        sum_of_squares = (X * X).sum(axis=1)
-        difference = np.sqrt(abs(sum_of_squares.reshape(
-            (N, 1)) + sum_of_squares.reshape((1, N)) - 2 * (X@X.T)))
+    def compute_stress_minopt(self):
 
-        # Some error may have accumlated, set diagonal to 0
-        np.fill_diagonal(difference, 0)
+        return 1.0        
 
-        return difference
+    def compute_stress_sheppard(self):
+        
+        return 1.0
+
+    def compute_stress_sheppardscale(self):
+
+        return 1.0
+
+    def compute_stress_unitball(self):
+
+        X = self.X / np.max(np.linalg.norm(self.X,ord=2,axis=1))
+        Xij = pairwise_distances(X)
+        D = self.D
+
+        stress = np.sum(np.square(Xij - D))
+
+        return stress / 2
+
+    def compute_stress_unitsquare(self):
+
+        return 1.0
+
+    def compute_stress_kk(self):
+        #https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=b8d3bca50ccc573c5cb99f7d201e8acce6618f04
+
+        return 1.0
 
     def compute_neighborhood(self, rg=2):
         """

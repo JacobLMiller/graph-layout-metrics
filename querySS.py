@@ -1,7 +1,7 @@
 from ssgetpy import search,fetch
 import networkx as nx
 
-matcollection = search(rowbounds=(None,2000), colbounds=(None,2000), limit=5000)
+matcollection = search(rowbounds=(None,1000), colbounds=(None,1000), limit=5000)
 
 print(matcollection[0])
 
@@ -11,6 +11,7 @@ from scipy.io import mmread
 import scipy.sparse as sp
 import numpy as np
 import os 
+if not os.path.isdir("SS_graphs"): os.makedirs("SS_graphs")
 for root, dirs, files in os.walk("SS_out/"):
     for name in files:
         if name.split(".")[1] != "mtx": continue

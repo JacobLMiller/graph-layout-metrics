@@ -47,16 +47,17 @@ def load_graphml(fname):
     G.graph.update({"gname": name})
     return G
 
-
 def get_corpus_file_names():
     import os
     for fname in os.listdir("graphs"):
         yield fname.split(".")[0]
 
-def get_corpus_SS():
+def get_corpus_SS(size_limit=1000):
     import os 
     for fname in os.listdir("SS_graphs"):
-        yield load_txt("SS_graphs/" + fname)
+        G = load_txt("SS_graphs/" + fname)
+        if size_limit and G.number_of_nodes() > size_limit: continue
+        yield G
         
 def load_txt(fname):
     E = np.loadtxt(fname)
