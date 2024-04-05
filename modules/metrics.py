@@ -107,12 +107,30 @@ class Metrics():
         return 1.0        
 
     def compute_stress_sheppard(self):
+        Xij = self.Xij #Embedding distance
+        D = self.D     #Graph/edge distance
         
-        return 1.0
+        Xij_flat = Xij.flatten()
+        D_flat = D.flatten()
+        
+        valid_indices = Xij_flat > 0 #Exclude any self comparisons (distance = 0)
+        Xij_filtered = Xij_flat[valid_indices]
+        D_filtered = D_flat[valid_indices]
+        
+        correlation = np.corrcoef(Xij_filtered, D_filtered)[0, 1]
+        
+        return correlation
 
     def compute_stress_sheppardscale(self):
+        Xij = self.Xij #Embedding distance
+        D = self.D     #Graph/edge distance
+        
+        max_D = D.max()
+        max_X = Xij.max()
+        
+        scale_factor = max_D/max_X if max_X > max_D else max_X/max_D
 
-        return 1.0
+        return scale_factor
 
     def compute_stress_unitball(self):
 
