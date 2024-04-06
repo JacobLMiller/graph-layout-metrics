@@ -113,6 +113,9 @@ class Metrics():
         Xij_flat = Xij.flatten()
         D_flat = D.flatten()
         
+        if (len(Xij_flat) != len(D_flat)):
+            print(Xij.shape, D.shape)
+        
         valid_indices = Xij_flat > 0 #Exclude any self comparisons (distance = 0)
         Xij_filtered = Xij_flat[valid_indices]
         D_filtered = D_flat[valid_indices]
