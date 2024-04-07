@@ -215,7 +215,7 @@ class Metrics():
         return alpha
     
     def intersect_alpha(self, other):
-        if (self.D != other.D):
+        if (self.D.all() != other.D.all()):
             print("Not the same graph!")
             return
         
