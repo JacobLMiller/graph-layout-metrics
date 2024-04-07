@@ -106,12 +106,8 @@ class Metrics():
         return result
 
     def compute_stress_minopt(self):
-
-        return 1.0
-
-    def compute_stress_minopt(self):
-
-        return 1.0
+        self.optimize_scale()
+        return self.compute_stress_norm()
 
     def compute_stress_sheppard(self):
         Xij = self.Xij  # Embedding distance
@@ -200,6 +196,48 @@ class Metrics():
         edge_lengths = np.array([dist(X[i], X[j]) for i, j in self.G.edges()])
 
         return np.sum(np.square((edge_lengths - 1) / 1))
+    
+    def optimize_scale(self):
+        D = self.D
+        Xij = self.Xij
+
+        num = 0
+        den = 0
+        for i in range(len(D)):
+            for j in range(i+1, len(D)):
+                num += Xij[i][j] / D[i][j]
+                den += (Xij[i][j] ** 2) / (D[i][j] ** 2)
+        alpha = num / den
+
+        self.X *= alpha
+        self.Xij = pairwise_distances(self.X)
+
+        return alpha
+    
+    def intersect_alpha(self, other):
+        if (self.D != other.D):
+            print("Not the same graph!")
+            return
+        
+        D = self.D
+        X1 = self.Xij
+        X2 = other.Xij
+
+        num = 0
+        den = 0
+        for i in range(len(D)):
+            for j in range(i+1, len(D)):
+                num += (X1[i][j] - X2[i][j]) / D[i][j]
+                den += (X1[i][j] ** 2 - X2[i][j] ** 2) / (D[i][j] ** 2)
+        num *= 2
+        alpha = num / den
+
+        self.X *= alpha
+        self.Xij = pairwise_distances(self.X)
+        other.X *= alpha
+        other.Xij = pairwise_distances(other.X)
+        
+        return alpha
 
 
 class MetricsData(Metrics):
