@@ -43,6 +43,14 @@ class Metrics():
         self.X = X
         self.Xij = pairwise_distances(self.X)
 
+    def min_alpha(self):
+        Xij = self.Xij 
+        D = self.D
+
+        x = Xij[np.triu_indices( Xij.shape[0], k=1 )]
+        d = D[np.triu_indices(D.shape[0], k=1)]
+        return np.sum(x / d) / np.sum(np.square(x / d))
+
     def compute_stress_norm(self):
         """
         Computes \sum_{i,j} ( (||X_i - X_j|| - D_{i,j}) / D_{i,j})^2
@@ -73,7 +81,7 @@ class Metrics():
 
         
         #sklearn has implemented an efficient distance matrix algorithm for us
-        output_dists = pairwise_distances(self.X)
+        output_dists = self.Xij
 
         #Extract the upper triangular of both distance matrices into 1d arrays 
         #We know the diagonal is all zero, so offset by one
@@ -99,12 +107,12 @@ class Metrics():
         return 1.0
 
     def compute_stress_minopt(self):
+        Xij = self.Xij 
+        D = self.D 
 
-        return 1.0
-
-    def compute_stress_minopt(self):
-
-        return 1.0        
+        alpha = self.min_alpha()
+        stress = np.sum(np.square(( (alpha*Xij) - D) / np.maximum(D, 1e-15)))
+        return stress / 2     
 
     def compute_stress_sheppard(self):
         Xij = self.Xij #Embedding distance
@@ -203,7 +211,12 @@ class MetricsData(Metrics):
         """
 
         #Check data format
-        self.X = X
+        if X.shape[0] == X.shape[1]: 
+            self.X = X
+            self.Xij = X
+        else: 
+            self.X = X 
+            self.Xij = pairwise_distances(X)
         if Y.shape[0] == Y.shape[1]: self.D = Y 
         else: self.D = pairwise_distances(Y)
 
