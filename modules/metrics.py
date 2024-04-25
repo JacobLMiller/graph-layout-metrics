@@ -50,12 +50,12 @@ class Metrics():
         d = D[np.triu_indices(D.shape[0], k=1)]
         return np.sum(x / d) / np.sum(np.square(x / d))
 
-    def compute_stress_norm(self):
+    def compute_stress_norm(self, scale_factor=1):
         """
         Computes \sum_{i,j} ( (||X_i - X_j|| - D_{i,j}) / D_{i,j})^2
         """
 
-        Xij = self.Xij
+        Xij = self.Xij * scale_factor
         D = self.D
 
         stress = np.sum(np.square((Xij - D) / np.maximum(D, 1e-15)))
@@ -102,7 +102,6 @@ class Metrics():
 
         result = 0
 
-
         for i in range(len(Xij)):
             for j in range(i+1, len(Xij[0])):
                 for u in range(len(Xij)):
@@ -119,8 +118,7 @@ class Metrics():
         D = self.D 
 
         alpha = self.min_alpha()
-        stress = np.sum(np.square(( (alpha*Xij) - D) / np.maximum(D, 1e-15)))
-        return stress / 2
+        return self.compute_stress_norm(alpha)
 
     def compute_stress_sheppard(self):
         Xij = self.Xij  # Embedding distance
@@ -147,8 +145,7 @@ class Metrics():
 
         scale_factor = max_D/max_X
 
-        stress = np.sum(np.square(((scale_factor * Xij) - D) / np.maximum(D, 1e-15)))
-        return stress / 2
+        return self.compute_stress_norm(scale_factor)
 
     def compute_stress_unitball(self):
 
