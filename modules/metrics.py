@@ -131,8 +131,11 @@ class Metrics():
         valid_indices = D_flat > 0
         Xij_filtered = Xij_flat[valid_indices]
         D_filtered = D_flat[valid_indices]
-
-        correlation = np.corrcoef(Xij_filtered, D_filtered)[0, 1]
+        
+        if np.std(Xij_filtered)==0 or np.std(D_filtered)==0:
+            correlation=0
+        else:
+            correlation = np.corrcoef(Xij_filtered, D_filtered)[0, 1]
 
         return correlation
 
