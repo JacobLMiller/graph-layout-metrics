@@ -172,3 +172,7 @@ cython_debug/
 
 # orders analysis notebook
 orders_analysis.csv
+
+# from messing w rome graphs
+rome/
+Rome_graphs/

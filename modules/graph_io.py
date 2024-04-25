@@ -9,7 +9,7 @@ def json_to_graph(fname):
 
     G = nx.Graph()
     G.add_nodes_from([v["id"] for v in js_graph["nodes"]])
-    G.add_edges_from([(e["source"], e["target"]) for e in js_graph["edges"]])
+    G.add_edges_from([(e["source"], e["target"]) for e in js_graph["links"]])
     G = nx.convert_node_labels_to_integers(G)
 
     return G
@@ -56,6 +56,24 @@ def get_corpus_SS(size_limit=1000):
     import os 
     for fname in os.listdir("SS_graphs"):
         G = load_txt("SS_graphs/" + fname)
+        if size_limit and G.number_of_nodes() > size_limit: continue
+        yield G
+
+def get_corpus_Rome(size_limit=2000):
+    import os 
+    for fname in os.listdir("Rome_graphs"):
+        G = load_txt("Rome_graphs/" + fname)
+        if size_limit and G.number_of_nodes() > size_limit: continue
+        yield G
+
+def get_corpus_full(size_limit=2000):
+    import os 
+    for fname in os.listdir("SS_graphs"):
+        G = load_txt("SS_graphs/" + fname)
+        if size_limit and G.number_of_nodes() > size_limit: continue
+        yield G
+    for fname in os.listdir("Rome_graphs"):
+        G = load_txt("Rome_graphs/" + fname)
         if size_limit and G.number_of_nodes() > size_limit: continue
         yield G
         
