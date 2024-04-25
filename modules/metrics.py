@@ -114,17 +114,13 @@ class Metrics():
 
         return result        
 
-    def compute_stress_minopt2(self):
+    def compute_stress_minopt(self):
         Xij = self.Xij 
         D = self.D 
 
         alpha = self.min_alpha()
         stress = np.sum(np.square(( (alpha*Xij) - D) / np.maximum(D, 1e-15)))
-        return stress / 2     
-
-    def compute_stress_minopt(self):
-        self.optimize_scale()
-        return self.compute_stress_norm()
+        return stress / 2
 
     def compute_stress_sheppard(self):
         Xij = self.Xij  # Embedding distance
@@ -149,9 +145,10 @@ class Metrics():
         max_D = D.max()
         max_X = Xij.max()
 
-        scale_factor = max_D/max_X if max_X > max_D else max_X/max_D
+        scale_factor = max_D/max_X
 
-        return scale_factor
+        stress = np.sum(np.square(((scale_factor * Xij) - D) / np.maximum(D, 1e-15)))
+        return stress / 2
 
     def compute_stress_unitball(self):
 
@@ -214,22 +211,9 @@ class Metrics():
 
         return np.sum(np.square((edge_lengths - 1) / 1))
     
-    def optimize_scale(self):
-        D = self.D
-        Xij = self.Xij
-
-        num = 0
-        den = 0
-        for i in range(len(D)):
-            for j in range(i+1, len(D)):
-                num += Xij[i][j] / D[i][j]
-                den += (Xij[i][j] ** 2) / (D[i][j] ** 2)
-        alpha = num / den
-
-        self.X *= alpha
+    def scale_minopt(self):
+        self.X *= self.min_alpha()
         self.Xij = pairwise_distances(self.X)
-
-        return alpha
     
     def intersect_alpha(self, other):
         if (self.D.all() != other.D.all()):
