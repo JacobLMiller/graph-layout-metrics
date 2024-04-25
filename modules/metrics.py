@@ -50,12 +50,12 @@ class Metrics():
         d = D[np.triu_indices(D.shape[0], k=1)]
         return np.sum(x / d) / np.sum(np.square(x / d))
 
-    def compute_stress_norm(self):
+    def compute_stress_norm(self, scale_factor=1):
         """
         Computes \sum_{i,j} ( (||X_i - X_j|| - D_{i,j}) / D_{i,j})^2
         """
 
-        Xij = self.Xij
+        Xij = self.Xij * scale_factor
         D = self.D
 
         stress = np.sum(np.square((Xij - D) / np.maximum(D, 1e-15)))
@@ -148,10 +148,12 @@ class Metrics():
 
         max_D = D.max()
         max_X = Xij.max()
+        
+        scale_fact = max_D/max_X if max_X > max_D else max_X/max_D
 
-        scale_factor = max_D/max_X if max_X > max_D else max_X/max_D
+        stress = self.compute_stress_norm(scale_fact)
 
-        return scale_factor
+        return stress
 
     def compute_stress_unitball(self):
 
