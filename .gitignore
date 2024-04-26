@@ -4,8 +4,8 @@ outputs/
 SS_graphs/
 SS_out/
 sheppard/
-
-
+graphs+embeddings.zip
+*.zip
 
 
 # Byte-compiled / optimized / DLL files
