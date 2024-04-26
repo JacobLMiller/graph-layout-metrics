@@ -35,9 +35,13 @@ class Metrics():
         elif isinstance(pos, np.ndarray):
             self.X = pos
 
+        if G.number_of_nodes() != self.X.shape[0]: print("Error!!")
         self.Xij = pairwise_distances(self.X)
 
         self.D = graph_io.get_apsp(self.G)
+        D = self.D
+
+        np.array([[D[i][j] for i in D.keys()] for j in D.keys()])
 
     def setX(self, X):
         self.X = X

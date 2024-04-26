@@ -46,9 +46,9 @@ if __name__ == "__main__":
     """
 
     experiment = Experiment(
-        lambda G,x: Metrics(G,x).compute_stress_norm(), #Given graph G and pos matrix x, computes normalized stress
-        "normalized-stress"                             # str name of stress metric, sets default of output json
+        lambda G,x: Metrics(G,x).compute_stress_kruskal(), #Given graph G and pos matrix x, computes normalized stress
+        "kruskal_stress"                             # str name of stress metric, sets default of output json
     )
-    experiment.conduct_experiment(limit=10)             #Only run the first 10 for example (default is to run all)
+    experiment.conduct_experiment()             #Only run the first 10 for example (default is to run all)
     experiment.write_results()                          #Write out the results to json. Default is to results/{name}-results.json
 

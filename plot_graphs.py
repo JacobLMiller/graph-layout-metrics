@@ -76,7 +76,6 @@ def stress_curve(G,X,ax):
 
     return normal_factors
 
-from modules.metrics_h import MetricsH
 def bar_chart(G,X,ax, normal_factors):
     MH = MetricsH(G, X)
     M = Metrics(G,X)
@@ -102,26 +101,13 @@ def bar_chart(G,X,ax, normal_factors):
 
 if __name__ == "__main__":
 
-    graph_corpus = list(graph_io.get_corpus_file_names())
-
-    # for gname in tqdm.tqdm(graph_corpus):
-    for gname in tqdm.tqdm(graph_corpus):
-        for emb in ["random", "stress", "tsnet"]:
-            Gnx, X = graph_io.load_graph_with_embedding(gname, emb)    
-            if Gnx.number_of_nodes() <= 1500: continue
+    for Gnx in graph_io.get_corpus_SS():
+        if Gnx.graph['gname'] == "dwt_419":
             G = convert_nx_to_gt(Gnx)
-            print(G.num_vertices())
+            for alg in ["random", 'stress', 'tsnet', "sfdp", "neato", "twopi"]:
+                X = graph_io.load_embedding(Gnx, alg)
+                pos = G.new_vp("vector<float>")
+                pos.set_2d_array(X.T)
+                gt.graph_draw(G,pos, output=f"drawings/dwt_419_{alg}.png")    
 
-            fig, axes = plt.subplots(2,2)
-            ax1, ax2 = axes[0]
-            ax3, ax4 = axes[1]
-            fig.set_size_inches(10,10)
-            draw(G, X, ax1)
-            sheppard_diagram(Gnx, X, ax2)
-            normal_vals = stress_curve(Gnx, X, ax3)
-            bar_chart(Gnx,X,ax4, normal_vals)
-
-            fig.savefig(f"drawings/{gname}_{emb}.png")
-            plt.close(fig)
-            plt.close()
 
