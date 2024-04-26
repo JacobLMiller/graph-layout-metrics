@@ -30,11 +30,12 @@ class Experiment():
             try:
                 stresses = {algs[i]: self.metric_function(G, x) for i,x in enumerate(layouts)}
                 stresses['order'] = sorted(stresses.keys(), key=stresses.get)
+                stresses['nnodes'] = G.number_of_nodes()
 
                 self.results[G.graph["gname"]] = stresses
             except:
                 print(f"\nBad Graph: {G.graph['gname']}")
-            
+
             if limit and count >= limit: break
 
     def write_results(self,fname=None):
@@ -49,9 +50,9 @@ if __name__ == "__main__":
     """
 
     experiment = Experiment(
-        lambda G,x: Metrics(G,x).compute_stress_raw(), #Given graph G and pos matrix x, computes normalized stress
-        "raw"                                          # str name of stress metric, sets default of output json
+        lambda G,x: Metrics(G,x).compute_stress_ratios(), #Given graph G and pos matrix x, computes normalized stress
+        "ratios-time"                                          # str name of stress metric, sets default of output json
     )
-    experiment.conduct_experiment()             #Only run the first 10 for example (default is to run all)
+    experiment.conduct_experiment(limit=50)             #Only run the first 10 for example (default is to run all)
     experiment.write_results()                          #Write out the results to json. Default is to results/{name}-results.json
 
