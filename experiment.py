@@ -28,9 +28,8 @@ class Experiment():
             layouts = [graph_io.load_embedding(G, alg) for alg in algs]
 
             try:
-                stresses = {algs[i]: self.metric_function(G, x) for i,x in enumerate(layouts)}
+                stresses = {f"{alg}": self.metric_function(G, x) for alg,x in zip(algs,layouts)}
                 stresses['order'] = sorted(stresses.keys(), key=stresses.get)
-                stresses['nnodes'] = G.number_of_nodes()
 
                 self.results[G.graph["gname"]] = stresses
             except:
@@ -48,11 +47,18 @@ if __name__ == "__main__":
     """
     Template for collecting data about stress measures
     """
+    mets = [
+        (lambda G,x: Metrics(G,x).compute_stress_sheppardscale(), "sheppardscale"), 
+        (lambda G,x: Metrics(G,x).compute_stress_sheppard(), "sheppard"), 
+        (lambda G,x: Metrics(G,x).compute_stress_minopt2(), "minopt"), 
+        (lambda G,x: Metrics(G,x).compute_stress_norm(), "normalized-stress"),
+        (lambda G,x: Metrics(G,x).compute_stress_raw(), "raw"), 
+        (lambda G,x: Metrics(G,x).compute_stress_unitball(), "unitball"),
+        (lambda G,x: Metrics(G,x).compute_stress_kruskal(), "kruskal")
+    ]
 
-    experiment = Experiment(
-        lambda G,x: Metrics(G,x).compute_stress_ratios(), #Given graph G and pos matrix x, computes normalized stress
-        "ratios-time"                                          # str name of stress metric, sets default of output json
-    )
-    experiment.conduct_experiment(limit=50)             #Only run the first 10 for example (default is to run all)
-    experiment.write_results()                          #Write out the results to json. Default is to results/{name}-results.json
+    for m in mets:
+        experiment = Experiment(*m)
+        experiment.conduct_experiment(algs=["stress", "tsnet", "random", "neato", "sfdp", "twopi"])             #Only run the first 10 for example (default is to run all)
+        experiment.write_results()                                                    #Write out the results to json. Default is to results/{name}-results.json
 

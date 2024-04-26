@@ -4,10 +4,9 @@ outputs/
 SS_graphs/
 SS_out/
 sheppard/
+graphs+embeddings.zip
+*.zip
 results/
-
-
-
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
