@@ -2,7 +2,7 @@ import numpy as np
 import networkx as nx
 from sklearn.metrics import pairwise_distances
 from modules import graph_io
-
+from scipy.stats import spearmanr
 
 def optimize_scale(X, D, func):
     from scipy.optimize import minimize_scalar
@@ -50,12 +50,12 @@ class Metrics():
         d = D[np.triu_indices(D.shape[0], k=1)]
         return np.sum(x / d) / np.sum(np.square(x / d))
 
-    def compute_stress_norm(self):
+    def compute_stress_norm(self, scale_factor=1):
         """
         Computes \sum_{i,j} ( (||X_i - X_j|| - D_{i,j}) / D_{i,j})^2
         """
 
-        Xij = self.Xij
+        Xij = self.Xij * scale_factor
         D = self.D
 
         stress = np.sum(np.square((Xij - D) / np.maximum(D, 1e-15)))
@@ -102,7 +102,6 @@ class Metrics():
 
         result = 0
 
-
         for i in range(len(Xij)):
             for j in range(i+1, len(Xij[0])):
                 for u in range(len(Xij)):
@@ -114,17 +113,12 @@ class Metrics():
 
         return result        
 
-    def compute_stress_minopt2(self):
+    def compute_stress_minopt(self):
         Xij = self.Xij 
         D = self.D 
 
         alpha = self.min_alpha()
-        stress = np.sum(np.square(( (alpha*Xij) - D) / np.maximum(D, 1e-15)))
-        return stress / 2     
-
-    def compute_stress_minopt(self):
-        self.optimize_scale()
-        return self.compute_stress_norm()
+        return self.compute_stress_norm(alpha)
 
     def compute_stress_sheppard(self):
         Xij = self.Xij  # Embedding distance
@@ -137,8 +131,11 @@ class Metrics():
         valid_indices = D_flat > 0
         Xij_filtered = Xij_flat[valid_indices]
         D_filtered = D_flat[valid_indices]
-
-        correlation = np.corrcoef(Xij_filtered, D_filtered)[0, 1]
+        
+        if np.std(Xij_filtered)==0 or np.std(D_filtered)==0:
+            correlation=0
+        else:
+            correlation = spearmanr(Xij_filtered, D_filtered)[0]
 
         return correlation
 
@@ -149,9 +146,9 @@ class Metrics():
         max_D = D.max()
         max_X = Xij.max()
 
-        scale_factor = max_D/max_X if max_X > max_D else max_X/max_D
+        scale_factor = max_D/max_X
 
-        return scale_factor
+        return self.compute_stress_norm(scale_factor)
 
     def compute_stress_unitball(self):
 
@@ -214,22 +211,9 @@ class Metrics():
 
         return np.sum(np.square((edge_lengths - 1) / 1))
     
-    def optimize_scale(self):
-        D = self.D
-        Xij = self.Xij
-
-        num = 0
-        den = 0
-        for i in range(len(D)):
-            for j in range(i+1, len(D)):
-                num += Xij[i][j] / D[i][j]
-                den += (Xij[i][j] ** 2) / (D[i][j] ** 2)
-        alpha = num / den
-
-        self.X *= alpha
+    def scale_minopt(self):
+        self.X *= self.min_alpha()
         self.Xij = pairwise_distances(self.X)
-
-        return alpha
     
     def intersect_alpha(self, other):
         if (self.D.all() != other.D.all()):

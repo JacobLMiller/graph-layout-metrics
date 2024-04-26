@@ -10,7 +10,7 @@ def main():
     if not os.path.isdir("outputs"):
         os.makedirs("outputs")
 
-    stress_comp_test(1)
+    stress_comp_test(5)
     # stress_orders_test(5)
     # find_min_crossings(5)
 
@@ -35,7 +35,8 @@ def plot_er_stress(G, er_num, er_prob):
 
     pos = {"spring": nx.spring_layout(G),
            "random": nx.random_layout(G),
-           "spiral": nx.spiral_layout(G)}
+           "spiral": nx.spiral_layout(G),
+           "spectral": nx.spectral_layout(G)}
 
     X = {k: pairwise_distances([pos[k][i]
                                for i in range(len(pos[k]))]) for k in pos}
@@ -57,8 +58,10 @@ def plot_er_stress(G, er_num, er_prob):
     colors = ['tab:red', 'tab:green', 'tab:blue', 'tab:orange', 'tab:pink']
 
     for i, k in enumerate(stresses.keys()):
-        plt.plot(alphas, stresses[k], label=k, c=colors[i % len(colors)], zorder=0)
-        plt.scatter(mins[k], stress(X[k], D, mins[k]), c=colors[i % len(colors)], zorder=1)
+        plt.plot(alphas, stresses[k], label=k,
+                 c=colors[i % len(colors)], zorder=0)
+        plt.scatter(mins[k], stress(X[k], D, mins[k]),
+                    c=colors[i % len(colors)], zorder=1)
 
     plt.vlines([a for a in inters.values() if a > 0], min(mins.values()), max([stress(X[k], D, max_alpha)
                for k in X]), colors='tab:purple', zorder=-1, label='intersections')
