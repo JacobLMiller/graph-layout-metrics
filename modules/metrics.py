@@ -2,7 +2,7 @@ import numpy as np
 import networkx as nx
 from sklearn.metrics import pairwise_distances
 from modules import graph_io
-
+from scipy.stats import spearmanr
 
 def optimize_scale(X, D, func):
     from scipy.optimize import minimize_scalar
@@ -135,7 +135,7 @@ class Metrics():
         if np.std(Xij_filtered)==0 or np.std(D_filtered)==0:
             correlation=0
         else:
-            correlation = np.corrcoef(Xij_filtered, D_filtered)[0, 1]
+            correlation = spearmanr(Xij_filtered, D_filtered)[0]
 
         return correlation
 
