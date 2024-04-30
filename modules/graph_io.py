@@ -82,7 +82,7 @@ def load_txt(fname):
     G = nx.Graph()
     G.add_edges_from(E.tolist())
     G = nx.convert_node_labels_to_integers(G)
-    G.graph['gname'] = fname.split(".")[0].replace("SS_graphs/", "")
+    G.graph['gname'] = fname.split(".")[0].split("/")[1]
     return G
 
 def load_embedding(G, alg):
