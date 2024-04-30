@@ -85,4 +85,15 @@ if __name__ == "__main__":
         if not isinstance(load_embedding(G,"sfdp"), np.ndarray):
             emb = Layout(G, "sfdp")
             emb.compute()
-            emb.store_layout()                        
+            emb.store_layout()                 
+
+
+        if not isinstance(load_embedding(G,"twopi"), np.ndarray):
+            emb = Layout(G, "twopi")
+            emb.compute()
+            emb.store_layout()                 
+
+        if not isinstance(load_embedding(G,"neato"), np.ndarray):
+            emb = Layout(G, "neato")
+            emb.compute()
+            emb.store_layout()                             
