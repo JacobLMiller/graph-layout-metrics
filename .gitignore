@@ -4,12 +4,19 @@ outputs/
 SS_graphs/
 SS_out/
 sheppard/
+<<<<<<< HEAD
 hd_test.py
 human_pancreas*
 results/
 
 
 
+=======
+graphs+embeddings.zip
+*.zip
+results/
+
+>>>>>>> fecb531ae195db51b4aac81682fe1508a6386ec4
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -171,5 +178,9 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-# orders analysis notebook
-orders_analysis.csv
+# csv files
+*.csv
+
+# from messing w rome graphs
+rome/
+Rome_graphs/

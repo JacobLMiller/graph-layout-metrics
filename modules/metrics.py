@@ -101,19 +101,26 @@ class Metrics():
         return kruskal_stress
 
     def compute_stress_ratios(self):
+        import time
+
+        start_time = time.time()
+
         Xij = self.Xij
-        D = self.D
+        Dij = self.D
 
         result = 0
 
-        for i in range(len(Xij)):
-            for j in range(i+1, len(Xij[0])):
-                for u in range(len(Xij)):
-                    for v in range(u+1, len(Xij[0])):
-                        if (D[u][v] != 0 and Xij[u][v] != 0):
-                            result += (D[i][j]/D[u][v] - Xij[i][j]/Xij[u][v]) ** 2
-                        else:
-                            print(f"@({u},{v}) Xij: {Xij[u][v]}, Dij: {D[u][v]}")
+        X2ij = Xij
+        D2ij = Dij
+        for i in range(Xij.shape[0]):
+            for j in range(Xij.shape[1]):
+                if i * Xij.shape[1] + j >= 100:
+                    return (time.time() - start_time) * Xij.shape[0] * Xij.shape[1] / 100
+                result += np.sum(np.square((Dij / np.maximum(D2ij, 1e-15)) - (Xij / np.maximum(X2ij, 1e-15))))
+                X2ij = np.roll(X2ij, 1)
+                D2ij = np.roll(D2ij, 1)
+
+        return time.time() - start_time
 
         return result        
 

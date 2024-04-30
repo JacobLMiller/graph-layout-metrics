@@ -17,7 +17,7 @@ class Experiment():
         self.metric_name = metric_name
         self.results = dict()
     
-    def conduct_experiment(self, algs=["stress", "tsnet", "random"], limit=None, size_limit=1000):
+    def conduct_experiment(self, algs=["stress", "tsnet", "random", "sfdp", "neato", "twopi"], limit=None, size_limit=1000):
         #Calc length to show progress bar:
         from os import listdir
         total = len(listdir("SS_graphs"))
@@ -27,11 +27,14 @@ class Experiment():
 
             layouts = [graph_io.load_embedding(G, alg) for alg in algs]
 
-            stresses = {f"A{i}": self.metric_function(G, x) for i,x in enumerate(layouts)}
-            stresses['order'] = sorted(stresses.keys(), key=stresses.get)
+            try:
+                stresses = {f"{alg}": self.metric_function(G, x) for alg,x in zip(algs,layouts)}
+                stresses['order'] = sorted(stresses.keys(), key=stresses.get)
 
-            self.results[G.graph["gname"]] = stresses
-            
+                self.results[G.graph["gname"]] = stresses
+            except:
+                print(f"\nBad Graph: {G.graph['gname']}")
+
             if limit and count >= limit: break
 
     def write_results(self,fname=None):
@@ -44,11 +47,18 @@ if __name__ == "__main__":
     """
     Template for collecting data about stress measures
     """
+    mets = [
+        (lambda G,x: Metrics(G,x).compute_stress_sheppardscale(), "sheppardscale"), 
+        (lambda G,x: Metrics(G,x).compute_stress_sheppard(), "sheppard"), 
+        (lambda G,x: Metrics(G,x).compute_stress_minopt2(), "minopt"), 
+        (lambda G,x: Metrics(G,x).compute_stress_norm(), "normalized-stress"),
+        (lambda G,x: Metrics(G,x).compute_stress_raw(), "raw"), 
+        (lambda G,x: Metrics(G,x).compute_stress_unitball(), "unitball"),
+        (lambda G,x: Metrics(G,x).compute_stress_kruskal(), "kruskal")
+    ]
 
-    experiment = Experiment(
-        lambda G,x: Metrics(G,x).compute_stress_kruskal(), #Given graph G and pos matrix x, computes normalized stress
-        "kruskal_stress"                             # str name of stress metric, sets default of output json
-    )
-    experiment.conduct_experiment()             #Only run the first 10 for example (default is to run all)
-    experiment.write_results()                          #Write out the results to json. Default is to results/{name}-results.json
+    for m in mets:
+        experiment = Experiment(*m)
+        experiment.conduct_experiment(algs=["stress", "tsnet", "random", "neato", "sfdp", "twopi"])             #Only run the first 10 for example (default is to run all)
+        experiment.write_results()                                                    #Write out the results to json. Default is to results/{name}-results.json
 
