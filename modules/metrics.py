@@ -3,6 +3,7 @@ import networkx as nx
 from sklearn.metrics import pairwise_distances
 from modules import graph_io
 from scipy.stats import spearmanr
+import math
 
 def optimize_scale(X, D, func):
     from scipy.optimize import minimize_scalar
@@ -38,9 +39,9 @@ class Metrics():
         if G.number_of_nodes() != self.X.shape[0]: print("Error!!")
         self.Xij = pairwise_distances(self.X)
         self.D = graph_io.get_apsp(self.G)
-        D = self.D
+        #D = self.D
 
-        np.array([[D[i][j] for i in D.keys()] for j in D.keys()])
+        #np.array([[D[i][j] for i in D.keys()] for j in D.keys()])
 
     def setX(self, X):
         self.X = X
@@ -103,7 +104,7 @@ class Metrics():
     def compute_stress_ratios(self):
         import time
 
-        start_time = time.time()
+        #start_time = time.time()
 
         Xij = self.Xij
         Dij = self.D
@@ -114,13 +115,13 @@ class Metrics():
         D2ij = Dij
         for i in range(Xij.shape[0]):
             for j in range(Xij.shape[1]):
-                if i * Xij.shape[1] + j >= 100:
-                    return (time.time() - start_time) * Xij.shape[0] * Xij.shape[1] / 100
+                #if i * Xij.shape[1] + j >= 100:
+                #    return (time.time() - start_time) * Xij.shape[0] * Xij.shape[1] / 100
                 result += np.sum(np.square((Dij / np.maximum(D2ij, 1e-15)) - (Xij / np.maximum(X2ij, 1e-15))))
                 X2ij = np.roll(X2ij, 1)
                 D2ij = np.roll(D2ij, 1)
 
-        return time.time() - start_time
+        #return time.time() - start_time
 
         return result        
 
@@ -175,10 +176,19 @@ class Metrics():
 
         return 1.0
 
-    def compute_stress_kk(self):
+    def compute_stress_kk(self, scale_factor=1):
         # https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=b8d3bca50ccc573c5cb99f7d201e8acce6618f04
 
-        return 1.0
+        Xij = self.Xij  # Embedding distance (pos in colab)
+        D = self.D      # Graph/edge distance (sp in colab)
+        stress = 0
+        
+        for u in self.G.nodes():
+            for v in self.G.nodes():
+                if u < v:
+                    stress += ((math.dist(Xij[u], Xij[v])-(scale_factor*D[u][v]))**2)/(D[u][v]**2)
+
+        return stress
 
     def compute_neighborhood(self, rg=2):
         """
