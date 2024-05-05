@@ -20,10 +20,10 @@ class Experiment():
     def conduct_experiment(self, algs=["stress", "tsnet", "random", "sfdp", "neato", "twopi"], limit=None, size_limit=1000):
         #Calc length to show progress bar:
         from os import listdir
-        total = len(listdir("SS_graphs"))
+        total = len(listdir("Rome_graphs"))
 
         from tqdm import tqdm
-        for count, G in enumerate(tqdm(graph_io.get_corpus_SS(size_limit), total=total)):
+        for count, G in enumerate(tqdm(graph_io.get_corpus_Rome(size_limit), total=total)):
 
             layouts = [graph_io.load_embedding(G, alg) for alg in algs]
 

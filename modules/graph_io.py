@@ -59,14 +59,14 @@ def get_corpus_SS(size_limit=1000):
         if size_limit and G.number_of_nodes() > size_limit: continue
         yield G
 
-def get_corpus_Rome(size_limit=2000):
+def get_corpus_Rome(size_limit=1000):
     import os 
     for fname in os.listdir("Rome_graphs"):
         G = load_txt("Rome_graphs/" + fname)
         if size_limit and G.number_of_nodes() > size_limit: continue
         yield G
 
-def get_corpus_full(size_limit=2000):
+def get_corpus_full(size_limit=1000):
     import os 
     for fname in os.listdir("SS_graphs"):
         G = load_txt("SS_graphs/" + fname)
