@@ -4,6 +4,14 @@ from modules import graph_io
 from modules.metrics import Metrics
 from layouts import Layout
 import json
+import time 
+
+def time_func(f,arg1, arg2):
+    start = time.perf_counter()
+    res = f(arg1, arg2)
+    end = time.perf_counter()
+
+    return res, end - start
 
 class Experiment():
     def __init__(self, metric_function, metric_name):
@@ -28,7 +36,12 @@ class Experiment():
             layouts = [graph_io.load_embedding(G, alg) for alg in algs]
 
             try:
-                stresses = {f"{alg}": self.metric_function(G, x) for alg,x in zip(algs,layouts)}
+                stresses = dict()
+                for alg, x in zip(algs, layouts):
+                    stress_val, time_val = time_func(self.metric_function, G,x)
+                    stresses[f"{alg}"] = stress_val
+                    stresses[f"{alg}_time"] = time_val
+            # stresses = {f"{alg}": self.metric_function(G, x) for alg,x in zip(algs,layouts)}
                 stresses['order'] = sorted(stresses.keys(), key=stresses.get)
 
                 self.results[G.graph["gname"]] = stresses
@@ -48,17 +61,17 @@ if __name__ == "__main__":
     Template for collecting data about stress measures
     """
     mets = [
-        (lambda G,x: Metrics(G,x).compute_stress_sheppardscale(), "sheppardscale"), 
-        (lambda G,x: Metrics(G,x).compute_stress_sheppard(), "sheppard"), 
-        (lambda G,x: Metrics(G,x).compute_stress_minopt2(), "minopt"), 
-        (lambda G,x: Metrics(G,x).compute_stress_norm(), "normalized-stress"),
-        (lambda G,x: Metrics(G,x).compute_stress_raw(), "raw"), 
-        (lambda G,x: Metrics(G,x).compute_stress_unitball(), "unitball"),
-        (lambda G,x: Metrics(G,x).compute_stress_kruskal(), "kruskal")
+        # (lambda G,x: Metrics(G,x).compute_stress_sheppardscale(), "sheppardscale"), 
+        # (lambda G,x: Metrics(G,x).compute_stress_sheppard(), "sheppard"), 
+        (lambda G,x: Metrics(G,x).compute_stress_minopt(), "minopt"), 
+        # (lambda G,x: Metrics(G,x).compute_stress_norm(), "normalized-stress"),
+        # (lambda G,x: Metrics(G,x).compute_stress_raw(), "raw"), 
+        # (lambda G,x: Metrics(G,x).compute_stress_unitball(), "unitball"),
+        # (lambda G,x: Metrics(G,x).compute_stress_kruskal(), "kruskal")
     ]
 
     for m in mets:
         experiment = Experiment(*m)
         experiment.conduct_experiment(algs=["stress", "tsnet", "random", "neato", "sfdp", "twopi"])             #Only run the first 10 for example (default is to run all)
-        experiment.write_results()                                                    #Write out the results to json. Default is to results/{name}-results.json
+        experiment.write_results("test-with-time.json")                                                    #Write out the results to json. Default is to results/{name}-results.json
 
