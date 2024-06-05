@@ -4,19 +4,14 @@ outputs/
 SS_graphs/
 SS_out/
 sheppard/
-<<<<<<< HEAD
+results/
+
 hd_test.py
 human_pancreas*
-results/
 
-
-
-=======
-graphs+embeddings.zip
 *.zip
-results/
+*.out
 
->>>>>>> fecb531ae195db51b4aac81682fe1508a6386ec4
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

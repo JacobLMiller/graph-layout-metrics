@@ -102,28 +102,21 @@ class Metrics():
         return kruskal_stress
 
     def compute_stress_ratios(self):
-        import time
-
-        #start_time = time.time()
 
         Xij = self.Xij
         Dij = self.D
 
         result = 0
 
-        X2ij = Xij
-        D2ij = Dij
         for i in range(Xij.shape[0]):
-            for j in range(Xij.shape[1]):
-                #if i * Xij.shape[1] + j >= 100:
-                #    return (time.time() - start_time) * Xij.shape[0] * Xij.shape[1] / 100
-                result += np.sum(np.square((Dij / np.maximum(D2ij, 1e-15)) - (Xij / np.maximum(X2ij, 1e-15))))
-                X2ij = np.roll(X2ij, 1)
-                D2ij = np.roll(D2ij, 1)
+            for j in range(i+1, Xij.shape[1]):
+                for u in range(Xij.shape[0]):
+                    for v in range(u+1, Xij.shape[1]):
+                        if (Dij[u][v] == 0 or Xij[u][v] == 0):
+                            continue
+                        result += ((Dij[i][j] / Dij[u][v]) - (Xij[i][j] / Xij[u][v])) ** 2
 
-        #return time.time() - start_time
-
-        return result        
+        return 2 * result
 
     def compute_stress_minopt(self):
         Xij = self.Xij 
@@ -176,19 +169,16 @@ class Metrics():
 
         return 1.0
 
-    def compute_stress_kk(self, scale_factor=1):
+    def compute_stress_kk(self):
         # https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=b8d3bca50ccc573c5cb99f7d201e8acce6618f04
 
-        Xij = self.Xij  # Embedding distance (pos in colab)
-        D = self.D      # Graph/edge distance (sp in colab)
-        stress = 0
-        
-        for u in self.G.nodes():
-            for v in self.G.nodes():
-                if u < v:
-                    stress += ((math.dist(Xij[u], Xij[v])-(scale_factor*D[u][v]))**2)/(D[u][v]**2)
+        Xij = self.Xij
+        Dij = self.D
+        L = np.max(Xij) / np.max(Dij)
 
-        return stress
+        stress = np.sum(np.square((Xij - (L * Dij)) / np.maximum(Dij, 1e-15)))
+
+        return stress / 2
 
     def compute_neighborhood(self, rg=2):
         """
