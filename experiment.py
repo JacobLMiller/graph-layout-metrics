@@ -4,6 +4,14 @@ from modules import graph_io
 from modules.metrics import Metrics
 from layouts import Layout
 import json
+import time 
+
+def time_func(f,arg1, arg2):
+    start = time.perf_counter()
+    res = f(arg1, arg2)
+    end = time.perf_counter()
+
+    return res, end - start
 
 
 class Experiment():
@@ -70,7 +78,7 @@ if __name__ == "__main__":
         # (lambda G,x: Metrics(G,x).compute_stress_raw(), "raw"),
         # (lambda G,x: Metrics(G,x).compute_stress_unitball(), "unitball"),
         # (lambda G,x: Metrics(G,x).compute_stress_kruskal(), "kruskal"),
-        # (lambda G,x: Metrics(G,x).compute_stress_kk(), "kk-rome")
+        # (lambda G,x: Metrics(G,x).compute_stress_kk(), "kk")
         (lambda G, x: Metrics(G, x).compute_stress_ratios(), "ratios")
     ]
 

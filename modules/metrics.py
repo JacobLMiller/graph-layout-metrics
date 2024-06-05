@@ -1,7 +1,7 @@
 import numpy as np
 import networkx as nx
 from sklearn.metrics import pairwise_distances
-from modules import graph_io
+# from modules import graph_io
 from scipy.stats import spearmanr
 import math
 
@@ -259,6 +259,7 @@ class MetricsData(Metrics):
         Y: High dimensional coordiantes of objects. Can be given as N x D matrix
             (for which a pairwise distance matrix will be computed) or the distances directly as an N x N matrix        
         """
+        from scipy.spatial.distance import pdist
 
         #Check data format
         if X.shape[0] == X.shape[1]: 
@@ -266,12 +267,33 @@ class MetricsData(Metrics):
             self.Xij = X
         else: 
             self.X = X 
-            self.Xij = pairwise_distances(X)
+            self.Xij = pdist(X)
         if Y.shape[0] == Y.shape[1]: self.D = Y 
-        else: self.D = pairwise_distances(Y)
+        else: self.D = pdist(Y)
 
         self.N = X.shape[0]
 
         # Ensure compatibility with parent class
         self.name = None
         self.G = None
+
+    def compute_stress_kruskal(self):
+        from sklearn.isotonic import IsotonicRegression
+
+        xij = self.Xij 
+        dij = self.D
+
+        # Find the indices of dij that when reordered, would sort it. Apply to both arrays
+        sorted_indices = np.argsort(dij)
+        dij = dij[sorted_indices]
+        xij = xij[sorted_indices]
+
+        hij = IsotonicRegression().fit(dij, xij).predict(dij)
+
+        raw_stress = np.sum(np.square(xij - hij))
+        norm_factor = np.sum(np.square(xij))
+
+        kruskal_stress = np.sqrt(raw_stress / norm_factor)
+        return kruskal_stress        
+
+
