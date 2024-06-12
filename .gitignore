@@ -4,7 +4,7 @@ outputs/
 SS_graphs/
 SS_out/
 sheppard/
-results/
+# results/
 
 hd_test.py
 human_pancreas*
@@ -174,7 +174,7 @@ cython_debug/
 #.idea/
 
 # csv files
-*.csv
+# *.csv
 
 # from messing w rome graphs
 rome/
