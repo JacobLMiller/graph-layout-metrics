@@ -98,7 +98,7 @@ def get_apsp(G):
     if not os.path.isdir("apsps"):
         os.makedirs("apsps")
 
-    name = G.graph["gname"]
+    name = G.graph["gname"] if 'gname' in G.graph else 'tmp'
     try:
         return np.loadtxt(f"apsps/{name}_apsp.txt")
     except:

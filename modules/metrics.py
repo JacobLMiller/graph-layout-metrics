@@ -1,7 +1,7 @@
 import numpy as np
 import networkx as nx
 from sklearn.metrics import pairwise_distances
-# from modules import graph_io
+from modules import graph_io
 from scipy.stats import spearmanr
 import math
 
