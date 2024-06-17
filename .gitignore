@@ -4,7 +4,7 @@ outputs/
 SS_graphs/
 SS_out/
 sheppard/
-# results/
+results/
 
 hd_test.py
 human_pancreas*

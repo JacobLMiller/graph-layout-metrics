@@ -5,6 +5,13 @@ import numpy as np
 from sklearn.metrics import pairwise_distances
 
 
+"""
+Computes some statistics about the graphs found in the Rome_graphs/ and
+SS_graphs/ directories, along with the layouts found in embeddings/. Saves
+the results into two csv files in the results/ directory.
+"""
+
+
 def degree_info(G):
     degrees = dict(G.degree())
     min_degree = min(degrees.values())

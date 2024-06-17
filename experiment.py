@@ -2,6 +2,7 @@ from modules import graph_io
 from modules.metrics import Metrics
 import json
 import time
+import os
 
 
 def time_func(f, arg1, arg2):
@@ -15,7 +16,7 @@ def time_func(f, arg1, arg2):
 class Experiment():
     def __init__(self, metric_function, metric_name):
         """
-        metric_function(G,x) must be a function with two parameters,
+        metric_function(G, x) must be a function with two parameters,
         G: a networkx graph
         x: A dict/matrix of positions for G
         """
@@ -25,9 +26,8 @@ class Experiment():
 
     def conduct_experiment(self, SS=False, algs=["stress", "tsnet", "random", "neato", "sfdp", "twopi"], limit=None, size_limit=1000):
         # Calc length to show progress bar:
-        from os import listdir
-        total = len(listdir("SS_graphs")) if SS else len(
-            listdir("Rome_graphs"))
+        total = len(os.listdir("SS_graphs")) if SS else len(
+            os.listdir("Rome_graphs"))
 
         # Retrieve graph dataset
         corpus = graph_io.get_corpus_SS(
@@ -61,6 +61,9 @@ class Experiment():
                 break
 
     def write_results(self, fname=None):
+        if not os.path.isdir('results'):
+            os.makedirs('results')
+
         if fname is None:
             fname = f"results/{self.metric_name}-results.json"
         with open(fname, 'w') as fdata:
@@ -72,15 +75,15 @@ if __name__ == "__main__":
     Template for collecting data about stress measures
     """
     mets = [
-        (lambda G,x: Metrics(G,x).compute_stress_raw(), "raw"),
-        (lambda G,x: Metrics(G,x).compute_stress_kk(), "kk"),
-        (lambda G,x: Metrics(G,x).compute_stress_norm(), "normalized-stress"),
-        (lambda G,x: Metrics(G,x).compute_stress_minopt(), "minopt"),
-        (lambda G,x: Metrics(G,x).compute_stress_sheppard(), "sheppard"),
-        (lambda G,x: Metrics(G,x).compute_stress_sheppardscale(), "sheppardscale"),
-        (lambda G,x: Metrics(G,x).compute_stress_kruskal(), "kruskal"),
+        (lambda G, x: Metrics(G, x).compute_stress_raw(), "raw"),
+        (lambda G, x: Metrics(G, x).compute_stress_kk(), "kk"),
+        (lambda G, x: Metrics(G, x).compute_stress_norm(), "normalized-stress"),
+        (lambda G, x: Metrics(G, x).compute_stress_minopt(), "minopt"),
+        (lambda G, x: Metrics(G, x).compute_stress_sheppard(), "sheppard"),
+        (lambda G, x: Metrics(G, x).compute_stress_sheppardscale(), "sheppardscale"),
+        (lambda G, x: Metrics(G, x).compute_stress_kruskal(), "kruskal"),
 
-        # (lambda G,x: Metrics(G,x).compute_stress_ratios(), "ratios")
+        # (lambda G, x: Metrics(G, x).compute_stress_ratios(), "ratios")
     ]
 
     for m in mets:
