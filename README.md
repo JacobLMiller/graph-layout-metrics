@@ -45,20 +45,20 @@ A Jupyter notebook which formats the results from each metric into a single csv.
 ## experiment.py 
 Code used to conduct experiment detailed in accompanying paper.
 
-# graph_statistics.py
+## graph_statistics.py
 Script which computes various relevant graph statistics for graph collections. 
 
-# layouts.py 
+## layouts.py 
 Generates several different layouts for graph collection and writes them to file. 
 
-# orders_analysis.ipynb
+## orders_analysis.ipynb
 Notebook which computes and stores the order of layout algorithms according to various stress measures. 
 
-# queryRome.py 
+## queryRome.py 
 Downloads and stores the RomeLib graph collection to the local directory.
 
-# querySS.py 
+## querySS.py 
 Downloads and stores all graphs of less than 1000 vertices from the SuiteSparse matrix collection. 
 
-# runtime_eval.py
+## runtime_eval.py
 Formats runtime results and stores in csv computed during the experiment. 
